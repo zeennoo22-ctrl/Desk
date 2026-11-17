@@ -16,7 +16,9 @@
   --border: #30425d;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
 html, body {
   margin: 0;
@@ -62,7 +64,9 @@ button {
   padding: 11px 14px;
 }
 
-button:hover { border-color: var(--accent); }
+button:hover {
+  border-color: var(--accent);
+}
 
 .actions {
   display: flex;
@@ -186,8 +190,13 @@ button:hover { border-color: var(--accent); }
   font-size: 15px;
 }
 
-.day span { font-size: 27px; }
-.day small { font-size: 13px; }
+.day span {
+  font-size: 27px;
+}
+
+.day small {
+  font-size: 13px;
+}
 
 .shift {
   display: flex;
@@ -198,7 +207,9 @@ button:hover { border-color: var(--accent); }
   font-size: 15px;
 }
 
-.shift:last-child { border: 0; }
+.shift:last-child {
+  border: 0;
+}
 
 .shift .value {
   text-align: left;
@@ -221,23 +232,6 @@ button:hover { border-color: var(--accent); }
 .status.bad {
   background: #412629;
   color: #ffcdce;
-}
-
-#fallbackWeather {
-  display: none;
-  margin-top: 15px;
-}
-
-.weather-img {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  border-radius: 10px;
-  background: #fff;
-}
-
-#fallbackWeather a {
-  color: var(--accent);
 }
 
 label {
@@ -359,11 +353,11 @@ footer {
     <h2 style="font-size:21px;margin:0">
       🌤️ الطقس الخارجي · دريسدن
     </h2>
-    <span class="small">Open-Meteo</span>
+    <span class="small">رصد DWD + توقعات ICON</span>
   </div>
 
   <div class="current">
-    <div id="icon" class="icon">🌤️</div>
+    <div id="icon" class="icon">🌡️</div>
 
     <div>
       <div id="temp" class="temp">—</div>
@@ -374,35 +368,31 @@ footer {
   </div>
 
   <div class="extras" id="extras"></div>
+  <div class="small" id="observationSource"></div>
+
+  <div class="small" style="margin-top:14px">
+    ⏳ الطقس خلال الساعات القادمة · التوقعات
+  </div>
+
+  <div class="forecast" id="hourlyForecast"></div>
+
+  <div class="small" style="margin-top:18px">
+    📆 توقعات الأيام القادمة
+  </div>
+
   <div class="forecast" id="forecast"></div>
 
   <div id="weatherStatus" class="status">
     يحاول الاتصال بخدمة الطقس.
-  </div>
-
-  <div id="fallbackWeather">
-    <div class="small">
-      طريقة عرض بديلة من wttr.in إذا تعذّر اتصال API:
-    </div>
-
-    <img
-      class="weather-img"
-      id="weatherImage"
-      alt="توقعات الطقس في دريسدن"
-    />
-
-    <p class="small" id="fallbackStatus">
-      جارٍ جلب صورة الطقس…
-    </p>
   </div>
 </section>
 
 </main>
 
 <footer>
-  تحديث الطقس كل 15 دقيقة ·
-  الأوقات حسب Europe/Berlin ·
-  لا تُعرض أرقام طقس وهمية
+  تحديث كل 15 دقيقة ·
+  الحرارة المرصودة من أقرب محطة DWD عند توفرها ·
+  التوقعات ليست قياسات مباشرة
 </footer>
 
 </div>
@@ -631,31 +621,185 @@ footer {
 
   let busy = false;
 
-  function backupImage() {
-    const box = $('fallbackWeather');
-    const img = $('weatherImage');
+  async function getJSON(url, ms = 12000) {
+    const controller = new AbortController();
 
-    box.style.display = 'block';
+    const timeout = setTimeout(
+      () => controller.abort(),
+      ms
+    );
 
-    $('fallbackStatus').textContent =
-      'جارٍ تحميل صورة الطقس البديلة…';
+    try {
+      const res = await fetch(url, {
+        cache: 'no-store',
+        signal: controller.signal
+      });
 
-    const src =
-      'https://wttr.in/Dresden_lang=ar.png?v=' +
-      Date.now();
+      if (!res.ok) throw Error('HTTP ' + res.status);
 
-    img.onload = () => {
-      $('fallbackStatus').textContent =
-        'المصدر: wttr.in · الصورة تتحدث عند تحديث الطقس.';
-    };
+      return await res.json();
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
 
-    img.onerror = () => {
-      $('fallbackStatus').textContent =
-        'تعذّر تحميل صورة الطقس أيضاً. ' +
-        'افتح الموقع من متصفح عادي وتأكد من اتصال الإنترنت.';
-    };
+  function iconFor(code, day = true) {
+    const val = meaning(code);
 
-    img.src = src;
+    if (day === false && [0, 1].includes(code))
+      return '🌙';
+
+    if (day === false && code === 2)
+      return '☁️';
+
+    return val[0];
+  }
+
+  function dateTimeDisplay(iso) {
+    const x = new Date(iso);
+
+    if (!Number.isFinite(x.getTime()))
+      return 'وقت غير معروف';
+
+    return dt(x, {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  function writeForecast(j) {
+    if (
+      !j ||
+      !j.daily ||
+      !Array.isArray(j.daily.time) ||
+      !j.daily.time.length
+    ) {
+      throw Error('التوقعات غير مكتملة');
+    }
+
+    const daily = $('forecast');
+    daily.replaceChildren();
+
+    j.daily.time.slice(0, 3).forEach((key, i) => {
+      const el = document.createElement('div');
+      el.className = 'day';
+
+      const name = document.createElement('strong');
+
+      name.textContent =
+        i === 0 ? 'اليوم' :
+        i === 1 ? 'غداً' : 'بعد غد';
+
+      const icon = document.createElement('span');
+      icon.textContent = iconFor(j.daily.weather_code?.[i]);
+
+      const temp = document.createElement('small');
+
+      const a = j.daily.temperature_2m_max?.[i];
+      const b = j.daily.temperature_2m_min?.[i];
+
+      temp.textContent =
+        (Number.isFinite(a) && Number.isFinite(b))
+          ? `${Math.round(a)}° / ${Math.round(b)}°`
+          : '—';
+
+      const prob = document.createElement('small');
+      prob.style.display = 'block';
+
+      const pp =
+        j.daily.precipitation_probability_max?.[i];
+
+      prob.textContent = Number.isFinite(pp)
+        ? `أقصى احتمال مطر: ${pp}%`
+        : 'احتمال المطر: —';
+
+      el.append(
+        name,
+        icon,
+        document.createElement('br'),
+        temp,
+        prob
+      );
+
+      daily.append(el);
+    });
+
+    const hourly = $('hourlyForecast');
+    hourly.replaceChildren();
+
+    const times = j.hourly?.time || [];
+
+    const hr = dt(
+      new Date(),
+      { hour: '2-digit' },
+      'en-GB'
+    ).replace(/[^0-9]/g, '').padStart(2, '0');
+
+    const thisHour = dateISO(new Date()) + 'T' + hr + ':00';
+
+    const start = Math.max(
+      0,
+      times.findIndex(t => t >= thisHour)
+    );
+
+    for (
+      let i = start;
+      i < Math.min(times.length, start + 3);
+      i++
+    ) {
+      const el = document.createElement('div');
+      el.className = 'day';
+
+      const name = document.createElement('strong');
+      name.textContent = times[i].slice(11, 16);
+
+      const icon = document.createElement('span');
+
+      const today =
+        j.daily.time.indexOf(times[i].slice(0, 10));
+
+      const rise = j.daily.sunrise?.[today];
+      const set = j.daily.sunset?.[today];
+
+      const sunlight =
+        rise && set
+          ? (times[i] >= rise && times[i] < set)
+          : true;
+
+      icon.textContent = iconFor(
+        j.hourly.weather_code?.[i],
+        sunlight
+      );
+
+      const temp = document.createElement('small');
+      const t = j.hourly.temperature_2m?.[i];
+
+      temp.textContent = Number.isFinite(t)
+        ? Math.round(t) + '°C'
+        : '—';
+
+      const pp = document.createElement('small');
+      pp.style.display = 'block';
+
+      const pr =
+        j.hourly.precipitation_probability?.[i];
+
+      pp.textContent = Number.isFinite(pr)
+        ? `مطر: ${pr}%`
+        : 'مطر: —';
+
+      el.append(
+        name,
+        icon,
+        document.createElement('br'),
+        temp,
+        pp
+      );
+
+      hourly.append(el);
+    }
   }
 
   async function weather() {
@@ -663,126 +807,185 @@ footer {
 
     busy = true;
 
-    $('weatherStatus').textContent =
-      'جارٍ الاتصال بـ Open-Meteo…';
-
     $('weatherStatus').classList.remove('bad');
 
-    $('fallbackWeather').style.display = 'none';
+    $('weatherStatus').textContent =
+      'جارٍ جلب رصد الحرارة والتوقعات...';
 
-    const controller = new AbortController();
+    const pForecast =
+      'https://api.open-meteo.com/v1/forecast' +
+      '?latitude=51.0504' +
+      '&longitude=13.7373' +
+      '&models=icon_seamless' +
+      '&current=temperature_2m,weather_code,wind_speed_10m,is_day' +
+      '&hourly=temperature_2m,weather_code,precipitation_probability' +
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
+      '&timezone=Europe%2FBerlin' +
+      '&forecast_days=3';
 
-    const timeout = setTimeout(
-      () => controller.abort(),
-      15000
-    );
+    const pObserved =
+      'https://api.brightsky.dev/current_weather' +
+      '?lat=51.0504' +
+      '&lon=13.7373' +
+      '&tz=Europe%2FBerlin';
 
     try {
-      const url =
-        'https://api.open-meteo.com/v1/forecast' +
-        '?latitude=51.0504' +
-        '&longitude=13.7373' +
-        '&current=temperature_2m,weather_code,wind_speed_10m' +
-        '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
-        '&timezone=Europe%2FBerlin' +
-        '&forecast_days=3';
+      const [fr, ob] = await Promise.allSettled([
+        getJSON(pForecast),
+        getJSON(pObserved)
+      ]);
 
-      const res = await fetch(url, {
-        signal: controller.signal,
-        cache: 'no-store'
-      });
+      const f =
+        fr.status === 'fulfilled' && fr.value?.current
+          ? fr.value
+          : null;
 
-      if (!res.ok) {
-        throw Error('HTTP ' + res.status);
+      const o =
+        ob.status === 'fulfilled'
+          ? ob.value
+          : null;
+
+      const r = o?.weather;
+
+      const age = r?.timestamp
+        ? (Date.now() - Date.parse(r.timestamp)) / 60000
+        : Infinity;
+
+      const observed =
+        r &&
+        Number.isFinite(r.temperature) &&
+        age >= -5 &&
+        age <= 120;
+
+      if (f) {
+        writeForecast(f);
+      } else {
+        $('forecast').replaceChildren();
+        $('hourlyForecast').replaceChildren();
       }
 
-      const j = await res.json();
+      if (observed) {
+        const rain = r.precipitation_60;
 
-      if (
-        !j.current ||
-        typeof j.current.temperature_2m !== 'number' ||
-        !j.daily?.time?.length
+        let label = 'رصد من محطة أرصاد';
+        let icon = '🌡️';
+
+        if (Number.isFinite(rain) && rain > 0) {
+          label = 'هطول مسجّل خلال ساعة';
+          icon = '🌧️';
+        } else if (Number.isFinite(r.cloud_cover)) {
+          if (r.cloud_cover >= 75) {
+            label = 'غيوم كثيفة';
+            icon = '☁️';
+          } else if (r.cloud_cover >= 35) {
+            label = 'غائم جزئياً';
+            icon = '☁️';
+          } else {
+            label = 'غيوم قليلة';
+            icon = f?.current?.is_day === 0
+              ? '🌙'
+              : '🌤️';
+          }
+        }
+
+        $('temp').textContent =
+          Math.round(r.temperature) + '°C';
+
+        $('icon').textContent = icon;
+        $('condition').textContent = label;
+
+        const wind =
+          r.wind_speed_10 ??
+          r.wind_speed_30 ??
+          r.wind_speed_60;
+
+        $('extras').textContent =
+          'الرياح المرصودة: ' +
+          (Number.isFinite(wind)
+            ? Math.round(wind) + ' كم/س'
+            : 'غير متوفرة');
+
+        const source =
+          (o.sources || []).find(
+            x => x.id === r.source_id
+          ) || o.sources?.[0];
+
+        $('observationSource').textContent =
+          'حرارة مرصودة من DWD' +
+          (source?.station_name
+            ? ' · محطة ' + source.station_name
+            : '') +
+          (Number.isFinite(source?.distance)
+            ? ' · تبعد ' +
+              (source.distance / 1000).toFixed(1) +
+              ' كم'
+            : '') +
+          ' · ' +
+          dateTimeDisplay(r.timestamp);
+
+      } else if (
+        f &&
+        Number.isFinite(f.current.temperature_2m)
       ) {
-        throw Error('بيانات ناقصة');
-      }
+        const cur = f.current;
 
-      const t = j.current;
-      const ico = meaning(t.weather_code);
+        $('temp').textContent =
+          Math.round(cur.temperature_2m) + '°C';
 
-      $('temp').textContent =
-        Math.round(t.temperature_2m) + '°C';
-
-      $('icon').textContent = ico[0];
-      $('condition').textContent = ico[1];
-
-      $('extras').textContent =
-        'الرياح: ' +
-        Math.round(t.wind_speed_10m) +
-        ' كم/س · احتمال المطر اليوم: ' +
-        (j.daily.precipitation_probability_max[0] ?? '—') +
-        '%';
-
-      $('forecast').replaceChildren();
-
-      j.daily.time.forEach((key, i) => {
-        const card = document.createElement('div');
-        const title = document.createElement('strong');
-        const emoji = document.createElement('span');
-        const txt = document.createElement('small');
-
-        card.className = 'day';
-
-        title.textContent =
-          i === 0 ? 'اليوم' :
-          i === 1 ? 'غداً' : 'بعد غد';
-
-        emoji.textContent =
-          meaning(j.daily.weather_code[i])[0];
-
-        txt.textContent =
-          Math.round(j.daily.temperature_2m_max[i]) +
-          '° / ' +
-          Math.round(j.daily.temperature_2m_min[i]) +
-          '°';
-
-        card.append(
-          title,
-          emoji,
-          document.createElement('br'),
-          txt
+        $('icon').textContent = iconFor(
+          cur.weather_code,
+          cur.is_day === 1
         );
 
-        $('forecast').append(card);
-      });
+        $('condition').textContent =
+          meaning(cur.weather_code)[1];
+
+        $('extras').textContent =
+          'الرياح المتوقعة: ' +
+          (Number.isFinite(cur.wind_speed_10m)
+            ? Math.round(cur.wind_speed_10m) + ' كم/س'
+            : '—');
+
+        $('observationSource').textContent =
+          '⚠️ تقدير من نموذج DWD ICON، وليس رصداً مباشراً. وقت التوقع: ' +
+          cur.time.replace('T', ' ');
+
+      } else {
+        $('temp').textContent = '—';
+        $('icon').textContent = '🌡️';
+
+        $('condition').textContent =
+          'تعذر جلب قياس حديث';
+
+        $('extras').textContent = '';
+        $('observationSource').textContent = '';
+      }
+
+      if (!f && !observed) {
+        throw Error('تعذر الوصول إلى مصادر الطقس');
+      }
 
       $('weatherStatus').textContent =
-        'بيانات Open-Meteo · وقت الرصد: ' +
-        t.time.replace('T', ' ') +
-        ' بتوقيت دريسدن';
+        (f
+          ? 'توقعات الساعات والأيام: DWD ICON عبر Open-Meteo'
+          : 'التوقعات غير متاحة حالياً') +
+        ' · آخر محاولة تحديث ' +
+        dt(new Date(), {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+      if (!f) {
+        $('weatherStatus').classList.add('bad');
+      }
 
     } catch (e) {
-      $('temp').textContent = '—';
-      $('icon').textContent = '🌤️';
-
-      $('condition').textContent =
-        'الطقس غير متاح من المصدر الأول';
-
-      $('extras').textContent = '';
-      $('forecast').replaceChildren();
-
       $('weatherStatus').textContent =
-        'فشل اتصال Open-Meteo: ' +
-        (e.name === 'AbortError'
-          ? 'انتهت مهلة الاتصال'
-          : e.message) +
-        ' · تجربة صورة بديلة';
+        'لم تنجح عملية جلب الطقس: ' + e.message;
 
       $('weatherStatus').classList.add('bad');
 
-      backupImage();
-
     } finally {
-      clearTimeout(timeout);
       busy = false;
     }
   }
