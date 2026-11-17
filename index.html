@@ -1,184 +1,801 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة المكتب / دريسدن</title>
-  <style>
-    :root {
-      --bg: #0b1120;
-      --card: #162032;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --accent: #38bdf8;
-      --border: #26354d;
-    }
-    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 25px;
-      max-width: 1200px;
-      margin-inline: auto;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 15px;
-      border-bottom: 1px solid var(--border);
-    }
-    .brand { font-size: 1.2rem; font-weight: bold; color: var(--text); }
-    .btn {
-      background: var(--card); color: var(--text);
-      border: 1px solid var(--border); padding: 8px 16px;
-      border-radius: 10px; cursor: pointer; font-size: 0.9rem;
-    }
-    .btn:hover { border-color: var(--accent); color: var(--accent); }
-    main {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 25px;
-      margin-block: auto;
-      padding-block: 30px;
-    }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 35px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .location-tag { color: var(--accent); font-size: 1rem; font-weight: 600; margin-bottom: 10px; }
-    .clock { font-size: 4.8rem; font-weight: 800; letter-spacing: 2px; line-height: 1.1; direction: ltr; text-align: right; }
-    .seconds { font-size: 2rem; color: var(--muted); font-weight: 400; }
-    .date { font-size: 1.3rem; color: var(--muted); margin-top: 15px; }
-    .weather-header { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.95rem; }
-    .weather-main { display: flex; align-items: center; gap: 20px; margin: 25px 0; }
-    .weather-icon { font-size: 4rem; }
-    .temp-now { font-size: 4.5rem; font-weight: 800; line-height: 1; direction: ltr; }
-    .weather-status { font-size: 1.2rem; color: var(--accent); margin-top: 5px; }
-    .metrics {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
-      padding-block: 15px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-      text-align: center; font-size: 0.95rem;
-    }
-    .metrics span { color: var(--muted); display: block; font-size: 0.85rem; margin-bottom: 4px; }
-    .forecast {
-      display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
-      margin-top: 20px; text-align: center;
-    }
-    .forecast-day { background: rgba(11, 17, 32, 0.5); padding: 12px; border-radius: 12px; }
-    .forecast-day small { color: var(--muted); display: block; margin-bottom: 5px; }
-    .forecast-day strong { font-size: 1.2rem; direction: ltr; display: inline-block; }
-    footer { text-align: center; color: var(--muted); font-size: 0.8rem; padding-top: 15px; border-top: 1px solid var(--border); }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>لوحة المكتب | إيزك</title>
+
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #0b1120;
+  --card: #162033;
+  --text: #f8fafc;
+  --muted: #afc0d1;
+  --accent: #6ed6ec;
+  --border: #30425d;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  max-width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 16px system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+}
+
+.wrapper {
+  max-width: 1250px;
+  margin: auto;
+  padding: clamp(12px, 2vw, 28px);
+}
+
+header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+h1 {
+  font-size: clamp(19px, 2.5vw, 26px);
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid #4b617d;
+  border-radius: 10px;
+  background: #263b53;
+  color: var(--text);
+  padding: 11px 14px;
+}
+
+button:hover { border-color: var(--accent); }
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: clamp(18px, 2.2vw, 30px);
+  min-width: 0;
+}
+
+.eyebrow {
+  font-size: 14px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.clock {
+  font-size: clamp(66px, 9vw, 138px);
+  line-height: 1.2;
+  font-weight: 450;
+  direction: ltr;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  letter-spacing: -.035em;
+}
+
+.sec {
+  font-size: .33em;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+
+.date {
+  font-size: clamp(20px, 2.6vw, 30px);
+  font-weight: 700;
+  text-align: center;
+  margin-top: 6px;
+}
+
+.small {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.current {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  min-height: 164px;
+}
+
+.icon {
+  font-size: 60px;
+  line-height: 1.1;
+}
+
+.temp {
+  font-size: clamp(55px, 6vw, 85px);
+  line-height: 1.1;
+  font-weight: 450;
+  direction: ltr;
+  text-align: right;
+}
+
+.condition {
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.extras {
+  margin: 12px 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.forecast {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.day {
+  background: #21314a;
+  border-radius: 10px;
+  padding: 12px 4px;
+  text-align: center;
+}
+
+.day strong {
+  display: block;
+  font-size: 15px;
+}
+
+.day span { font-size: 27px; }
+.day small { font-size: 13px; }
+
+.shift {
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 15px;
+}
+
+.shift:last-child { border: 0; }
+
+.shift .value {
+  text-align: left;
+  color: #d7e7ef;
+}
+
+.shift .value.none {
+  color: var(--muted);
+}
+
+.status {
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin-top: 12px;
+  font-size: 14px;
+  background: #22364e;
+  color: #d5e8f6;
+}
+
+.status.bad {
+  background: #412629;
+  color: #ffcdce;
+}
+
+#fallbackWeather {
+  display: none;
+  margin-top: 15px;
+}
+
+.weather-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  background: #fff;
+}
+
+#fallbackWeather a {
+  color: var(--accent);
+}
+
+label {
+  display: block;
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+input, select {
+  display: block;
+  width: 100%;
+  font-size: 17px;
+  background: #0b1524;
+  color: var(--text);
+  border: 1px solid #6a7d92;
+  border-radius: 9px;
+  padding: 10px;
+  margin-top: 7px;
+}
+
+dialog {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  min-width: min(92vw, 380px);
+}
+
+dialog::backdrop {
+  background: #0009;
+}
+
+.dialogActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+  margin-top: 20px;
+}
+
+footer {
+  padding: 18px 0 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media(max-width:800px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .clock {
+    font-size: clamp(62px, 16vw, 120px);
+  }
+}
+
+@media(max-width:350px) {
+  .actions button {
+    font-size: 14px;
+    padding: 9px;
+  }
+}
+</style>
 </head>
+
 <body>
+<div class="wrapper">
 
-  <header>
-    <div class="brand">◈ لوحة المكتب / دريسدن</div>
-    <button class="btn" onclick="toggleFullScreen()">⛶ ملء الشاشة</button>
-  </header>
+<header>
+  <h1>◈ لوحة المكتب / إيزك</h1>
 
-  <main>
-    <div class="card">
-      <div class="location-tag">📍 التوقيت المحلي · دريسدن، ألمانيا</div>
-      <div class="clock"><span id="hm">--:--</span><span class="seconds" id="sec">:--</span></div>
-      <div class="date" id="date">جارٍ تحميل التاريخ...</div>
+  <div class="actions">
+    <button id="reload" type="button">↻ تحديث الطقس</button>
+    <button id="add" type="button">＋ إضافة مناوبة</button>
+    <button id="fullscreen" type="button">⛶ ملء الشاشة</button>
+  </div>
+</header>
+
+<main class="grid">
+
+<div class="column">
+
+<section class="card">
+  <div class="eyebrow">📍 توقيت دريسدن · ألمانيا</div>
+
+  <div class="clock">
+    <span id="hm">--:--</span>
+    <span class="sec" id="seconds">:--</span>
+  </div>
+
+  <div class="date" id="date">جارٍ تشغيل الساعة…</div>
+
+  <noscript>
+    <p class="status bad">
+      متصفحك لا يشغّل JavaScript.
+      يلزم فتح الصفحة من رابط موقع HTTPS عبر Safari أو Chrome.
+    </p>
+  </noscript>
+</section>
+
+<section class="card">
+  <div class="head">
+    <h2 style="font-size:21px;margin:0">📅 المناوبات القادمة</h2>
+    <span class="small">المناوبات التي تُدخلها أنت فقط</span>
+  </div>
+
+  <div id="shifts"></div>
+
+  <p class="small">
+    تُحفظ المناوبات في هذا المتصفح على هذا الجهاز.
+    لا توجد بيانات تجريبية.
+  </p>
+</section>
+
+</div>
+
+<section class="card">
+  <div class="head">
+    <h2 style="font-size:21px;margin:0">
+      🌤️ الطقس الخارجي · دريسدن
+    </h2>
+    <span class="small">Open-Meteo</span>
+  </div>
+
+  <div class="current">
+    <div id="icon" class="icon">🌤️</div>
+
+    <div>
+      <div id="temp" class="temp">—</div>
+      <div id="condition" class="condition">
+        جارٍ جلب بيانات الطقس…
+      </div>
+    </div>
+  </div>
+
+  <div class="extras" id="extras"></div>
+  <div class="forecast" id="forecast"></div>
+
+  <div id="weatherStatus" class="status">
+    يحاول الاتصال بخدمة الطقس.
+  </div>
+
+  <div id="fallbackWeather">
+    <div class="small">
+      طريقة عرض بديلة من wttr.in إذا تعذّر اتصال API:
     </div>
 
-    <div class="card">
-      <div class="weather-header">
-        <span>الطقس الخارجي المباشر</span>
-        <span>Dresden Live</span>
-      </div>
-      
-      <div class="weather-main">
-        <div class="weather-icon" id="w-icon">⛅</div>
-        <div>
-          <div class="temp-now" id="temp-now">--°</div>
-          <div class="weather-status" id="w-desc">جارٍ جلب البيانات...</div>
-        </div>
-      </div>
+    <img
+      class="weather-img"
+      id="weatherImage"
+      alt="توقعات الطقس في دريسدن"
+    />
 
-      <div class="metrics">
-        <div><span>الرطوبة</span><strong id="hum">--%</strong></div>
-        <div><span>سرعة الرياح</span><strong id="wind">-- كم/س</strong></div>
-        <div><span>المحسوسة</span><strong id="feels">--°</strong></div>
-      </div>
+    <p class="small" id="fallbackStatus">
+      جارٍ جلب صورة الطقس…
+    </p>
+  </div>
+</section>
 
-      <div class="forecast">
-        <div class="forecast-day"><small>اليوم (العظمى)</small><strong id="day0">--°</strong></div>
-        <div class="forecast-day"><small>غداً</small><strong id="day1">--°</strong></div>
-        <div class="forecast-day"><small>بعد غد</small><strong id="day2">--°</strong></div>
-      </div>
+</main>
+
+<footer>
+  تحديث الطقس كل 15 دقيقة ·
+  الأوقات حسب Europe/Berlin ·
+  لا تُعرض أرقام طقس وهمية
+</footer>
+
+</div>
+
+<dialog id="dialog">
+  <form id="shiftForm">
+
+    <h2 style="margin-top:0">إضافة أو تعديل مناوبة</h2>
+
+    <label>
+      التاريخ
+      <input type="date" id="shiftDate" required>
+    </label>
+
+    <label>
+      نوع المناوبة
+
+      <select id="shiftType">
+        <option value="صباحية · 06:00–14:45">صباحية</option>
+        <option value="مسائية · 14:00–22:00">مسائية</option>
+        <option value="عطلة">عطلة</option>
+        <option value="مناوبة ليلية">ليلية</option>
+        <option value="مسح المناوبة">مسح المناوبة</option>
+      </select>
+    </label>
+
+    <div class="dialogActions">
+      <button type="submit">حفظ</button>
+      <button type="button" id="close">إلغاء</button>
     </div>
-  </main>
 
-  <footer>
-    تحديث تلقائي للطقس كل 30 دقيقة · دريسدن، ألمانيا
-  </footer>
+  </form>
+</dialog>
 
-  <script>
-    function pad(n) { return n < 10 ? '0' + n : n; }
+<script>
+(function() {
+  'use strict';
 
-    function updateClock() {
-      const now = new Date();
-      document.getElementById('hm').textContent = pad(now.getHours()) + ':' + pad(now.getMinutes());
-      document.getElementById('sec').textContent = ':' + pad(now.getSeconds());
-      document.getElementById('date').textContent = now.toLocaleDateString('ar-EG', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-      });
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
+  const $ = id => document.getElementById(id);
+  const TZ = 'Europe/Berlin';
 
-    function getIcon(code) {
-      const c = Number(code);
-      if (c === 113) return '☀️';
-      if (c === 116) return '⛅';
-      if (c === 119 || c === 122) return '☁️';
-      if (c === 143 || c === 248 || c === 260) return '🌫️';
-      if (c >= 176 && c <= 359) return '🌧️';
-      if (c >= 362) return '❄️';
-      return '🌤️';
-    }
+  const dt = (date, opts, lang = 'ar-SY') =>
+    new Intl.DateTimeFormat(lang, {
+      timeZone: TZ,
+      ...opts
+    }).format(date);
 
-    async function fetchWeather() {
-      try {
-        const res = await fetch('https://wttr.in');
-        const data = await res.json();
-        const cur = data.current_condition.at(0);
-        const days = data.weather;
+  function dateISO(date) {
+    const p = new Intl.DateTimeFormat('en-GB', {
+      timeZone: TZ,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(date);
 
-        document.getElementById('w-icon').textContent = getIcon(cur.weatherCode);
-        document.getElementById('temp-now').textContent = cur.temp_C + '°';
-        document.getElementById('feels').textContent = cur.FeelsLikeC + '°';
-        document.getElementById('wind').textContent = cur.windspeedKmph + ' كم/س';
-        document.getElementById('hum').textContent = cur.humidity + '%';
-        document.getElementById('w-desc').textContent = 'مباشر · دريسدن';
+    const o = Object.fromEntries(
+      p.map(x => [x.type, x.value])
+    );
 
-        document.getElementById('day0').textContent = days.at(0).maxtempC + '°';
-        document.getElementById('day1').textContent = days.at(1).maxtempC + '°';
-        document.getElementById('day2').textContent = days.at(2).maxtempC + '°';
-      } catch (e) {
-        document.getElementById('w-desc').textContent = 'جاري إعادة المحاولة...';
+    return `${o.year}-${o.month}-${o.day}`;
+  }
+
+  function clock() {
+    const now = new Date();
+
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      timeZone: TZ,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hourCycle: 'h23'
+    }).formatToParts(now);
+
+    const p = Object.fromEntries(
+      parts.map(x => [x.type, x.value])
+    );
+
+    $('hm').textContent = p.hour + ':' + p.minute;
+    $('seconds').textContent = ':' + p.second;
+
+    $('date').textContent = dt(now, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  clock();
+  setInterval(clock, 1000);
+
+  function dayKey(offset) {
+    const base = dateISO(new Date());
+    const [y, m, d] = base.split('-').map(Number);
+
+    const utc = new Date(
+      Date.UTC(y, m - 1, d + offset, 12)
+    );
+
+    return utc.toISOString().slice(0, 10);
+  }
+
+  function dayLabel(key) {
+    const [y, m, d] = key.split('-').map(Number);
+
+    return dt(
+      new Date(Date.UTC(y, m - 1, d, 12)),
+      {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'short'
       }
-    }
-    fetchWeather();
-    setInterval(fetchWeather, 1800000);
+    );
+  }
 
-    function toggleFullScreen() {
-      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-      else document.exitFullscreen();
+  let shifts = {};
+
+  try {
+    shifts = JSON.parse(
+      localStorage.getItem('izak_shifts') || '{}'
+    ) || {};
+  } catch (e) {}
+
+  function showShifts() {
+    const holder = $('shifts');
+    holder.replaceChildren();
+
+    for (let i = 0; i < 7; i++) {
+      const key = dayKey(i);
+
+      const row = document.createElement('div');
+      const date = document.createElement('span');
+      const value = document.createElement('span');
+
+      row.className = 'shift';
+      date.textContent = dayLabel(key);
+      value.textContent = shifts[key] || '—';
+
+      value.className =
+        'value' + (shifts[key] ? '' : ' none');
+
+      row.append(date, value);
+      holder.append(row);
     }
-  </script>
+  }
+
+  showShifts();
+
+  $('add').onclick = () => {
+    $('shiftDate').value = dayKey(0);
+    $('dialog').showModal();
+  };
+
+  $('close').onclick = () => $('dialog').close();
+
+  $('shiftForm').onsubmit = e => {
+    e.preventDefault();
+
+    let key = $('shiftDate').value;
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
+
+    let value = $('shiftType').value;
+
+    if (value === 'مسح المناوبة') {
+      delete shifts[key];
+    } else {
+      shifts[key] = value;
+    }
+
+    try {
+      localStorage.setItem(
+        'izak_shifts',
+        JSON.stringify(shifts)
+      );
+    } catch (e) {
+      alert('تعذر حفظ المناوبات على هذا المتصفح.');
+    }
+
+    showShifts();
+    $('dialog').close();
+  };
+
+  $('fullscreen').onclick = async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        return;
+      }
+
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+        return;
+      }
+    } catch (e) {}
+
+    alert(
+      'هذا المتصفح لا يدعم ملء الشاشة من الزر. ' +
+      'على الآيفون أضف الصفحة إلى الشاشة الرئيسية من قائمة المشاركة في Safari.'
+    );
+  };
+
+  function meaning(code) {
+    if (code === 0) return ['☀️', 'صحو'];
+    if (code === 1) return ['🌤️', 'غالباً صحو'];
+    if (code === 2) return ['⛅', 'غائم جزئياً'];
+    if (code === 3) return ['☁️', 'غائم'];
+
+    if ([45, 48].includes(code))
+      return ['🌫️', 'ضباب'];
+
+    if ([51, 53, 55, 56, 57].includes(code))
+      return ['🌦️', 'رذاذ'];
+
+    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code))
+      return ['🌧️', 'مطر'];
+
+    if ([71, 73, 75, 77, 85, 86].includes(code))
+      return ['🌨️', 'ثلج'];
+
+    if ([95, 96, 99].includes(code))
+      return ['⛈️', 'رعد'];
+
+    return ['🌡️', 'حالة غير محددة'];
+  }
+
+  let busy = false;
+
+  function backupImage() {
+    const box = $('fallbackWeather');
+    const img = $('weatherImage');
+
+    box.style.display = 'block';
+
+    $('fallbackStatus').textContent =
+      'جارٍ تحميل صورة الطقس البديلة…';
+
+    const src =
+      'https://wttr.in/Dresden_lang=ar.png?v=' +
+      Date.now();
+
+    img.onload = () => {
+      $('fallbackStatus').textContent =
+        'المصدر: wttr.in · الصورة تتحدث عند تحديث الطقس.';
+    };
+
+    img.onerror = () => {
+      $('fallbackStatus').textContent =
+        'تعذّر تحميل صورة الطقس أيضاً. ' +
+        'افتح الموقع من متصفح عادي وتأكد من اتصال الإنترنت.';
+    };
+
+    img.src = src;
+  }
+
+  async function weather() {
+    if (busy) return;
+
+    busy = true;
+
+    $('weatherStatus').textContent =
+      'جارٍ الاتصال بـ Open-Meteo…';
+
+    $('weatherStatus').classList.remove('bad');
+
+    $('fallbackWeather').style.display = 'none';
+
+    const controller = new AbortController();
+
+    const timeout = setTimeout(
+      () => controller.abort(),
+      15000
+    );
+
+    try {
+      const url =
+        'https://api.open-meteo.com/v1/forecast' +
+        '?latitude=51.0504' +
+        '&longitude=13.7373' +
+        '&current=temperature_2m,weather_code,wind_speed_10m' +
+        '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
+        '&timezone=Europe%2FBerlin' +
+        '&forecast_days=3';
+
+      const res = await fetch(url, {
+        signal: controller.signal,
+        cache: 'no-store'
+      });
+
+      if (!res.ok) {
+        throw Error('HTTP ' + res.status);
+      }
+
+      const j = await res.json();
+
+      if (
+        !j.current ||
+        typeof j.current.temperature_2m !== 'number' ||
+        !j.daily?.time?.length
+      ) {
+        throw Error('بيانات ناقصة');
+      }
+
+      const t = j.current;
+      const ico = meaning(t.weather_code);
+
+      $('temp').textContent =
+        Math.round(t.temperature_2m) + '°C';
+
+      $('icon').textContent = ico[0];
+      $('condition').textContent = ico[1];
+
+      $('extras').textContent =
+        'الرياح: ' +
+        Math.round(t.wind_speed_10m) +
+        ' كم/س · احتمال المطر اليوم: ' +
+        (j.daily.precipitation_probability_max[0] ?? '—') +
+        '%';
+
+      $('forecast').replaceChildren();
+
+      j.daily.time.forEach((key, i) => {
+        const card = document.createElement('div');
+        const title = document.createElement('strong');
+        const emoji = document.createElement('span');
+        const txt = document.createElement('small');
+
+        card.className = 'day';
+
+        title.textContent =
+          i === 0 ? 'اليوم' :
+          i === 1 ? 'غداً' : 'بعد غد';
+
+        emoji.textContent =
+          meaning(j.daily.weather_code[i])[0];
+
+        txt.textContent =
+          Math.round(j.daily.temperature_2m_max[i]) +
+          '° / ' +
+          Math.round(j.daily.temperature_2m_min[i]) +
+          '°';
+
+        card.append(
+          title,
+          emoji,
+          document.createElement('br'),
+          txt
+        );
+
+        $('forecast').append(card);
+      });
+
+      $('weatherStatus').textContent =
+        'بيانات Open-Meteo · وقت الرصد: ' +
+        t.time.replace('T', ' ') +
+        ' بتوقيت دريسدن';
+
+    } catch (e) {
+      $('temp').textContent = '—';
+      $('icon').textContent = '🌤️';
+
+      $('condition').textContent =
+        'الطقس غير متاح من المصدر الأول';
+
+      $('extras').textContent = '';
+      $('forecast').replaceChildren();
+
+      $('weatherStatus').textContent =
+        'فشل اتصال Open-Meteo: ' +
+        (e.name === 'AbortError'
+          ? 'انتهت مهلة الاتصال'
+          : e.message) +
+        ' · تجربة صورة بديلة';
+
+      $('weatherStatus').classList.add('bad');
+
+      backupImage();
+
+    } finally {
+      clearTimeout(timeout);
+      busy = false;
+    }
+  }
+
+  $('reload').onclick = weather;
+
+  weather();
+
+  setInterval(weather, 15 * 60 * 1000);
+  setInterval(showShifts, 60 * 1000);
+
+})();
+</script>
+
 </body>
 </html>
