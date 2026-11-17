@@ -41,7 +41,7 @@
     .btn:hover { border-color: var(--accent); color: var(--accent); }
     main {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 25px;
       margin-block: auto;
       padding-block: 30px;
@@ -56,7 +56,7 @@
       justify-content: center;
     }
     .location-tag { color: var(--accent); font-size: 1rem; font-weight: 600; margin-bottom: 10px; }
-    .clock { font-size: 5rem; font-weight: 800; letter-spacing: 2px; line-height: 1.1; direction: ltr; text-align: right; }
+    .clock { font-size: 4.8rem; font-weight: 800; letter-spacing: 2px; line-height: 1.1; direction: ltr; text-align: right; }
     .seconds { font-size: 2rem; color: var(--muted); font-weight: 400; }
     .date { font-size: 1.3rem; color: var(--muted); margin-top: 15px; }
     .weather-header { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.95rem; }
@@ -97,7 +97,7 @@
     <div class="card">
       <div class="weather-header">
         <span>الطقس الخارجي المباشر</span>
-        <span>Open-Meteo</span>
+        <span>Dresden Live</span>
       </div>
       
       <div class="weather-main">
@@ -109,7 +109,7 @@
       </div>
 
       <div class="metrics">
-        <div><span>احتمال المطر</span><strong id="rain">--%</strong></div>
+        <div><span>الرطوبة</span><strong id="hum">--%</strong></div>
         <div><span>سرعة الرياح</span><strong id="wind">-- كم/س</strong></div>
         <div><span>المحسوسة</span><strong id="feels">--°</strong></div>
       </div>
@@ -123,7 +123,7 @@
   </main>
 
   <footer>
-    تحديث تلقائي للطقس كل 30 دقيقة · البيانات عبر Open-Meteo
+    تحديث تلقائي للطقس كل 30 دقيقة · دريسدن، ألمانيا
   </footer>
 
   <script>
@@ -140,38 +140,36 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    function getWeatherInfo(code) {
-      if (code === 0) return { icon: '☀️', text: 'سماء صافية' };
-      if (code <= 3) return { icon: '⛅', text: 'غائم جزئياً' };
-      if (code <= 48) return { icon: '🌫️', text: 'ضباب' };
-      if (code <= 67) return { icon: '🌧️', text: 'أمطار' };
-      if (code <= 77) return { icon: '❄️', text: 'ثلوج' };
-      if (code <= 82) return { icon: '🌦️', text: 'زخات مطر' };
-      return { icon: '⛈️', text: 'عواصف رعدية' };
+    function getIcon(code) {
+      const c = Number(code);
+      if (c === 113) return '☀️';
+      if (c === 116) return '⛅';
+      if (c === 119 || c === 122) return '☁️';
+      if (c === 143 || c === 248 || c === 260) return '🌫️';
+      if (c >= 176 && c <= 359) return '🌧️';
+      if (c >= 362) return '❄️';
+      return '🌤️';
     }
 
     async function fetchWeather() {
       try {
-        const url = 'https://open-meteo.com';
-        const res = await fetch(url);
+        const res = await fetch('https://wttr.in');
         const data = await res.json();
+        const cur = data.current_condition.at(0);
+        const days = data.weather;
 
-        const info = getWeatherInfo(data.current.weather_code);
-        document.getElementById('w-icon').textContent = info.icon;
-        document.getElementById('w-desc').textContent = info.text;
-        document.getElementById('temp-now').textContent = Math.round(data.current.temperature_2m) + '°';
-        document.getElementById('feels').textContent = Math.round(data.current.apparent_temperature) + '°';
-        document.getElementById('wind').textContent = Math.round(data.current.wind_speed_10m) + ' كم/س';
-        
-        const rainList = data.daily.precipitation_probability_max;
-        const maxTemps = data.daily.temperature_2m_max;
+        document.getElementById('w-icon').textContent = getIcon(cur.weatherCode);
+        document.getElementById('temp-now').textContent = cur.temp_C + '°';
+        document.getElementById('feels').textContent = cur.FeelsLikeC + '°';
+        document.getElementById('wind').textContent = cur.windspeedKmph + ' كم/س';
+        document.getElementById('hum').textContent = cur.humidity + '%';
+        document.getElementById('w-desc').textContent = 'مباشر · دريسدن';
 
-        document.getElementById('rain').textContent = rainList.at(0) + '%';
-        document.getElementById('day0').textContent = Math.round(maxTemps.at(0)) + '°';
-        document.getElementById('day1').textContent = Math.round(maxTemps.at(1)) + '°';
-        document.getElementById('day2').textContent = Math.round(maxTemps.at(2)) + '°';
+        document.getElementById('day0').textContent = days.at(0).maxtempC + '°';
+        document.getElementById('day1').textContent = days.at(1).maxtempC + '°';
+        document.getElementById('day2').textContent = days.at(2).maxtempC + '°';
       } catch (e) {
-        document.getElementById('w-desc').textContent = 'تعذر الاتصال بخادم الطقس';
+        document.getElementById('w-desc').textContent = 'جاري إعادة المحاولة...';
       }
     }
     fetchWeather();
